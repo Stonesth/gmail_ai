@@ -20,7 +20,7 @@ import time
 # Spécifiez le modèle et la révision
 # Utiliser le premier GPU disponible
 device = 0  # Utiliser -1 pour CPU
-nbr_email = 3 # Nombre d'emails à traiter
+nbr_email = 4 # Nombre d'emails à traiter
 
 if torch.cuda.is_available():
     print(f"GPU is available: {torch.cuda.get_device_name(0)}")
@@ -184,17 +184,18 @@ def summarize_email_bart(body, max_length, min_length):
     end_time = time.time()
     execution_time = end_time - start_time
     print(f"Execution time: {execution_time} seconds")
-    print(f"Summary_ids: {summary_ids}")
+    # print(f"Summary_ids: {summary_ids}")
 
     print("Begin the tokenizer process")
     start_time = time.time()
-    print(f"Summary_ids[0]: {summary_ids[0]}")
+
+    # Convert the summary_ids to text
     summaries = [tokenizer.decode(summary_id, skip_special_tokens=True) for summary_id in summary_ids]
     summary = " ".join(summaries)
     end_time = time.time()
     execution_time = end_time - start_time
     print(f"Execution time: {execution_time} seconds")
-    print(f"Summary: {summary}")
+    # print(f"Summary: {summary}")
 
     summary = html.unescape(summary)
 
