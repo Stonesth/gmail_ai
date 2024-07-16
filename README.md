@@ -14,6 +14,9 @@ pip install torch torchvision
 pip install tensorflow
 pip install tf-keras
 pip install transformers
+pip install langdetect
+pip install googletrans
+pip install googletrans==4.0.0-rc1
 
 # Pour gérer les avertissements de tokenizers :
 
