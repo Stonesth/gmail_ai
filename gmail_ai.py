@@ -279,7 +279,7 @@ if __name__ == '__main__':
         # # Ajouter le résumé à la variable all_summaries (with summarize_email)
         # all_summaries += f"Titre: {html.unescape(email['subject'])}\n\n<br>Summary: {summary[0]['summary_text']}\n\n<br><br>"
         # all_summaries += f"Titre: {html.unescape(email['subject'])}\n\n<br>Summary: {summary.replace('. ', '.<br>')}\n\n<br><br>"
-        all_summaries += f"Titre: {html.unescape(email['subject'])}\n\n<br>Summary: {summary.replace('. ', '.<br>')}\n\n<br>Lien vers l'email: <a href='{email_link_encoded}'>Voir l'email original</a><br><br>"
+        all_summaries += f"Titre: {html.unescape(email['subject'])}\n\n<br>Summary: {summary.replace('. ', '.<br>')}\n\n<br>Lien vers l'email: <a href='{email_link_encoded}' target='_blank'>Voir l'email original</a><br><br>"
         
     # Ouvrir une seule page avec tous les résumés
     # print(f"all_summaries: {all_summaries}")
