@@ -18,11 +18,13 @@ import torch
 import time
 from langdetect import detect
 from googletrans import Translator
+import urllib.parse
+import chardet
 
 # Spécifiez le modèle et la révision
 # Utiliser le premier GPU disponible
 device = 0  # Utiliser -1 pour CPU
-nbr_email = 4 # Nombre d'emails à traiter
+nbr_email = 1 # Nombre d'emails à traiter
 
 if torch.cuda.is_available():
     print(f"GPU is available: {torch.cuda.get_device_name(0)}")
@@ -254,7 +256,13 @@ if __name__ == '__main__':
         print(f"Titre: {email['subject']}")
 
         # Convertir le corps de l'email en anglais
-        body_in_english = translate_to_language(email['body'], 'en')
+        # Assuming email['body'] is the bytes-like object that needs to be decoded
+        if isinstance(email['body'], bytes):
+            detected_encoding = chardet.detect(email['body'])['encoding']
+            text_to_translate = email['body'].decode(detected_encoding)
+        else:
+            text_to_translate = email['body']
+        body_in_english = translate_to_language(text_to_translate, 'en')
 
         summary = summarize_email_bart(email['body'], 1024, 100)
         summary.replace('<!doctype html>', '')
@@ -262,13 +270,31 @@ if __name__ == '__main__':
         # print(f"Summary: {summary}")
         # print("\n")
         
+        email_id = email['id']
+        base_url = "https://mail.google.com/mail/u/0/#inbox/"
+        email_id_encoded = urllib.parse.quote(email['id'])  # Encode uniquement l'ID de l'email
+        email_link = f"{base_url}{email_id_encoded}"
+        email_link_encoded = urllib.parse.quote(email_link)  # Encode l'URL pour éviter les erreurs de caractères spéciaux
+
         # # Ajouter le résumé à la variable all_summaries (with summarize_email)
         # all_summaries += f"Titre: {html.unescape(email['subject'])}\n\n<br>Summary: {summary[0]['summary_text']}\n\n<br><br>"
-        all_summaries += f"Titre: {html.unescape(email['subject'])}\n\n<br>Summary: {summary.replace('. ', '.<br>')}\n\n<br><br>"
-    
+        # all_summaries += f"Titre: {html.unescape(email['subject'])}\n\n<br>Summary: {summary.replace('. ', '.<br>')}\n\n<br><br>"
+        all_summaries += f"Titre: {html.unescape(email['subject'])}\n\n<br>Summary: {summary.replace('. ', '.<br>')}\n\n<br>Lien vers l'email: <a href='{email_link_encoded}'>Voir l'email original</a><br><br>"
+        
     # Ouvrir une seule page avec tous les résumés
     # print(f"all_summaries: {all_summaries}")
-    webbrowser.open_new_tab(f"data:text/html;charset=utf-8,<meta charset='UTF-8'>{all_summaries}")
+    # webbrowser.open_new_tab(f"data:text/html;charset=utf-8,<meta charset='UTF-8'>{all_summaries}")
+    
+    # Encodez tout le contenu HTML en UTF-8 avant de l'ouvrir dans le navigateur
+
+    all_summaries = all_summaries.replace('https%3A//', 'https://')
+    all_summaries = all_summaries.replace('%23inbox', '#inbox')
+
+    html_content = f"<meta charset='UTF-8'>{all_summaries}"
+
+
+    encoded_html_content = urllib.parse.quote(html_content)
+    webbrowser.open_new_tab(f"data:text/html;charset=utf-8,{encoded_html_content}")
 
 
 
