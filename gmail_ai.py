@@ -16,6 +16,8 @@ import quopri
 from transformers import BartTokenizer, BartForConditionalGeneration, pipeline
 import torch
 import time
+from langdetect import detect
+from googletrans import Translator
 
 # Spécifiez le modèle et la révision
 # Utiliser le premier GPU disponible
@@ -202,6 +204,34 @@ def summarize_email_bart(body, max_length, min_length):
     return summary
 
 
+def translate_to_language(text, dest_language):
+    """
+    Translates the given text to the specified destination language.
+
+    Args:
+        text (str): The text to be translated.
+        dest_language (str): The destination language for the translation.
+
+    Returns:
+        str: The translated text.
+    """
+    # Vérifier que le texte n'est pas None
+    if text is None:
+        return "Le texte à traduire ne peut pas être vide."
+    
+    # Check if the text is already in the destination language
+    if detect(text) == dest_language:
+        return text
+
+    # Translate the text to the destination language
+    try:
+        translator = Translator()
+        translation = translator.translate(text, dest=dest_language)
+        return translation.text
+    except Exception as e:
+        # Gérer l'exception ou retourner un message d'erreur
+        return f"Erreur lors de la traduction : {e}"
+    
 if __name__ == '__main__':
 
     # # Charger le tokenizer et le modèle
@@ -222,8 +252,13 @@ if __name__ == '__main__':
         # print(f"Snippet: {email['snippet']}")
         # summary = summarize_email(email['body'])
         print(f"Titre: {email['subject']}")
+
+        # Convertir le corps de l'email en anglais
+        body_in_english = translate_to_language(email['body'], 'en')
+
         summary = summarize_email_bart(email['body'], 1024, 100)
         summary.replace('<!doctype html>', '')
+        summary = translate_to_language(summary, 'fr')
         # print(f"Summary: {summary}")
         # print("\n")
         
