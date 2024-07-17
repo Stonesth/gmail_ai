@@ -17,6 +17,7 @@ pip install transformers
 pip install langdetect
 pip install googletrans
 pip install googletrans==4.0.0-rc1
+pip install schedule
 
 # Pour gérer les avertissements de tokenizers :
 

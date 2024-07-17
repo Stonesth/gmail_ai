@@ -20,11 +20,14 @@ from langdetect import detect
 from googletrans import Translator
 import urllib.parse
 import chardet
+import schedule
+
 
 # Spécifiez le modèle et la révision
 # Utiliser le premier GPU disponible
 device = 0  # Utiliser -1 pour CPU
-nbr_email = 1 # Nombre d'emails à traiter
+nbr_email = 3 # Nombre d'emails à traiter
+nbr_minutes_to_wait_before_next_run = 5  # Every x minutes
 
 if torch.cuda.is_available():
     print(f"GPU is available: {torch.cuda.get_device_name(0)}")
@@ -233,9 +236,8 @@ def translate_to_language(text, dest_language):
     except Exception as e:
         # Gérer l'exception ou retourner un message d'erreur
         return f"Erreur lors de la traduction : {e}"
-    
-if __name__ == '__main__':
 
+def job():
     # # Charger le tokenizer et le modèle
     # tokenizer = BartTokenizer.from_pretrained('facebook/bart-large-cnn')
     # model = BartForConditionalGeneration.from_pretrained('facebook/bart-large-cnn')
@@ -259,7 +261,7 @@ if __name__ == '__main__':
         # Assuming email['body'] is the bytes-like object that needs to be decoded
         if isinstance(email['body'], bytes):
             detected_encoding = chardet.detect(email['body'])['encoding']
-            text_to_translate = email['body'].decode(detected_encoding)
+            text_to_translate = email['body'].decode(detected_encoding, 'replace')
         else:
             text_to_translate = email['body']
         body_in_english = translate_to_language(text_to_translate, 'en')
@@ -296,5 +298,34 @@ if __name__ == '__main__':
     encoded_html_content = urllib.parse.quote(html_content)
     webbrowser.open_new_tab(f"data:text/html;charset=utf-8,{encoded_html_content}")
 
+if __name__ == '__main__':
+    # Schedule the job to run every hour
+    schedule.every(nbr_minutes_to_wait_before_next_run).minutes.do(job)
 
+    while True:
+        schedule.run_pending()
+        # Calculate the total number of iterations based on the number of minutes to wait
+        total_iterations = nbr_minutes_to_wait_before_next_run * 60
 
+        # Initialize the progress bar
+        progress_bar_length = 50
+        progress_bar = ""
+
+        # Iterate through the progress
+        for i in range(total_iterations):
+            # Perform the task
+            # ...
+
+            # Update the progress bar
+            progress = (i + 1) / total_iterations
+            filled_length = int(progress * progress_bar_length)
+            bar = "#" * filled_length + "-" * (progress_bar_length - filled_length)
+            progress_bar = f"[{bar}] {progress:.1%}"
+
+            # Print the progress bar
+            print(progress_bar, end="\r")
+            time.sleep(1)  # Wait for 1 second instead of 0.1 second
+
+        # Print the completion message
+        print("Task completed!")
+        time.sleep(1)
